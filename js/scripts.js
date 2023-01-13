@@ -26,17 +26,14 @@ let bulbasaur = {
   pokemonList[2]=clefable;
 
 
-  /* tell 'for-loop' code to look to length of variable array above first */
-for (let i=0; i < pokemonList.length; i++){
-    /* set condition for specific key-value of objects in array */
-      if (pokemonList[i].height >= 1){
-        console.log(pokemonList[i].name + " (height: " + pokemonList[i].height + ") - Wow, that's big!");
-    /* inserted html break line tag to display each object on a new line  */
-        document.write(pokemonList[i].name + " (height: " + pokemonList[i].height + ") - Wow, that's big!" + "<br>");
-    /* only need to use 'else' rather than 'else-if' as we want the output to be on just one object  */
-    } else {
-        console.log(pokemonList[i].name + " (height: " + pokemonList[i].height + ")");
-    /* inserted html break line tag to display each object on a new line  */
-        document.write(pokemonList[i].name + " (height: " + pokemonList[i].height + ")" + "<br>")
-    }
-    }
+/*replace for loop for forEach loop*/
+pokemonList.forEach (function(pokemon) {
+  if (pokemon.height >=5) {
+      document.write(pokemon.name + " (height: " + pokemon.height + "m) - Wow, that is a big pokemon!" + "<br>")
+  } else if (pokemon.height >= 1 && pokemon.height < 5) {
+      document.write(pokemon.name + " (height: " + pokemon.height + "m) - That is a medium pokemon!" + "<br>")
+  } else {
+      document.write(pokemon.name + " (height: " + pokemon.height + "m) - That is a small pokemon!" + "<br>")
+  }
+//      console.log(pokemon);
+  });
