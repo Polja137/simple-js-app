@@ -21,3 +21,19 @@ highlight colour #433fbc dark blue
     font-size: 14px;
     line-height: 1.4;
   }
+
+  
+.pokemon-list {
+  list-style: none;
+}
+
+
+.button-class {
+  background-color: var(--tertiary-color);
+  color: var(--white);
+  text-align: center;
+  padding: 16px 32px;
+  margin: 4px 2px;
+
+
+}
