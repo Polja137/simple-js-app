@@ -9,7 +9,6 @@ The App contains following UI patterns:
 ● Modal
 ● Search
 
-The App handles errors and helps with resolution 
+The App handles errors and helps with resolution
 
 image.png
-
