@@ -1,14 +1,37 @@
-let pokemonRepository = (function() {
-  //pokemon array
+let pokemonRepository = (function () {
   let pokemonList = [];
 
   let printedList = document.querySelector('.pokemon-list');
-  let apiUrl = 'https://pokeapi.co/api/v2/pokemon/?limit=150';
+
+  let apiUrl = 'https://pokeapi.co/api/v2/pokemon/?limit=200';
+
   let inputField = document.querySelector('.search');
+
   let pokemonModal = document.querySelector('.modal-dialog');
 
-  //function to add new pokemon to the pokemonList array via push (append the existing array). Check that the input is an object.
+  function showLoadingSpinner(spinnerLocation) {
+    let spinnerContainer = document.createElement('div');
+    spinnerContainer.classList.add('text-center');
+
+    let loadingSpinner = document.createElement('div');
+    loadingSpinner.classList.add('spinner-border');
+    loadingSpinner.setAttribute('role', 'status');
+
+    let spinnerText = document.createElement('span');
+    spinnerText.classList.add('sr-only');
+    spinnerText.innerText = 'Loading...';
+
+    loadingSpinner.appendChild(spinnerText);
+    spinnerContainer.appendChild(loadingSpinner);
+    spinnerLocation.appendChild(spinnerContainer);
+  }
+
+  function hideLoadingSpinner(spinnerLocation) {
+    spinnerLocation.removeChild(spinnerLocation.lastChild);
+  }
+
   function add(pokemon) {
+    // Validation of input type: Has to be an object which contains the keys name and detailsUrl
     if (
       typeof pokemon === 'object' &&
       Object.keys(pokemon).includes('name' && 'detailsUrl')
@@ -21,46 +44,59 @@ let pokemonRepository = (function() {
     }
   }
 
-// Called in case of loading error and while executing search
-function removeList() {
-  printedList.innerHTML = '';
-}
-
-// Called in case of loading error and when manually hiding modal
-function hideModal() {
-  pokemonModal.classList.add('hidden');
-}
-
-function showErrorMessage(message) {
-  let errorMessage = document.createElement('p');
-  errorMessage.classList.add('error-message');
-  errorMessage.classList.add('col-6');
-  errorMessage.innerText = message;
-
-  printedList.appendChild(errorMessage);
-}
-
-  //loadList function gets the pokemon list from the pokeAPI
-  function loadList() {
-    return fetch(apiUrl).then(function(response) {
-      return response.json();
-    }).then(function(json) {
-      //forEach loop to get the name and detail URL from the pokeAPI response
-      json.results.forEach(function(item) {
-        let pokemon = {
-          name: item.name,
-          detailsUrl: item.url
-        };
-        //calls the add function to add the "items"/pokemon to the pokemonList array
-        add(pokemon);
-      });
-      //if error log to the console
-    }).catch(function(e) {
-      console.error(e);
-    })
+  // Called in case of loading error and while executing search
+  function removeList() {
+    printedList.innerHTML = '';
   }
 
-  //Add pokemon to the list
+  // Called in case of loading error and when manually hiding modal
+  function hideModal() {
+    pokemonModal.classList.add('hidden');
+  }
+
+  function showErrorMessage(message) {
+    let errorMessage = document.createElement('p');
+    errorMessage.classList.add('error-message');
+    errorMessage.classList.add('col-6');
+    errorMessage.innerText = message;
+
+    printedList.appendChild(errorMessage);
+  }
+
+  function loadList() {
+    let spinnerLocation = document.querySelector('.main');
+    showLoadingSpinner(spinnerLocation);
+
+    return fetch(apiUrl)
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (json) {
+        hideLoadingSpinner(spinnerLocation);
+        pokemonArray = json.results;
+        pokemonArray.forEach(function (item) {
+          let pokemon = {
+            name: item.name,
+            detailsUrl: item.url,
+          };
+          add(pokemon);
+        });
+      })
+      .catch(function (e) {
+        hideLoadingSpinner(spinnerLocation);
+        removeList();
+        hideModal();
+        showErrorMessage(
+          "There don't seem to be any Pokémon around. If you are not offline, try again later."
+        );
+        console.error(e);
+      });
+  }
+
+  function getAll() {
+    return pokemonList;
+  }
+
   function addListPokemon(pokemon) {
     // Details have to be loaded to be able to use frontImageUrl
     loadDetails(pokemon).then(function () {
@@ -90,12 +126,7 @@ function showErrorMessage(message) {
     });
   }
 
-  //getAll function to return all of the items in the pokemonList array
-  function getAll() {
-    return pokemonList;
-  }
-
-  // Search box 
+  // Implementing search box functionality
   function filterPokemons(query) {
     return pokemonList.filter(function (pokemon) {
       // toLowerCase() method to make input not case-sensitive
@@ -104,7 +135,6 @@ function showErrorMessage(message) {
       return pokemonLowerCase.startsWith(queryLowerCase);
     });
   }
-
   inputField.addEventListener('input', function () {
     let query = inputField.value;
     let filteredList = filterPokemons(query);
@@ -118,42 +148,18 @@ function showErrorMessage(message) {
     }
   });
 
-  //loadList function gets the pokemon list from the pokeAPI
-  function loadList() {
-    return fetch(apiUrl)
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (json) {
-        hideLoadingSpinner(spinnerLocation);
-        pokemonArray = json.results;
-        pokemonArray.forEach(function (item) {
-          let pokemon = {
-            name: item.name,
-            detailsUrl: item.url,
-          };
-          add(pokemon);
-        });
-      })
-      .catch(function (e) {
-        //hideLoadingSpinner(spinnerLocation);
-        removeList();
-        hideModal();
-        showErrorMessage(
-          "There don't seem to be any Pokémon around. If you are not offline, try again later."
-        );
-        console.error(e);
-      });
-  }
+  function loadDetails(pokemon) {
+    let spinnerLocation = document.querySelector('.modal-body');
+    showLoadingSpinner(spinnerLocation);
 
-  //loads the details of the pokemon from the detailsUrl call
-  function loadDetails(item) {
-    let url = item.detailsUrl;
+    let url = pokemon.detailsUrl;
+
     return fetch(url)
       .then(function (response) {
         return response.json();
       })
       .then(function (details) {
+        hideLoadingSpinner(spinnerLocation);
         // Adding details to Pokemon by defining pokemon object-keys.
         pokemon.frontImageUrl = details.sprites.front_default;
         pokemon.backImageUrl = details.sprites.back_default;
@@ -178,17 +184,7 @@ function showErrorMessage(message) {
       });
   }
 
-
- 
-  
-
-    function showDetails(pokemon) {
-      loadDetails(pokemon).then(function() {
-        showModal(pokemon.name,pokemon.name + "'s height is: " + pokemon.height, pokemon.imageURL);
-      });
-    }
-
-    // Function to be called upon clicking Pokemon buttons: 1. Fetching Pokemon details and then 2. open modal with details
+  // Function to be called upon clicking Pokemon buttons: 1. Fetching Pokemon details and then 2. open modal with details
   function showDetails(pokemon) {
     loadDetails(pokemon).then(function () {
       let modalTitle = document.querySelector('.modal-title');
@@ -239,23 +235,28 @@ function showErrorMessage(message) {
     }
   });
 
+  // Returning a new object with keys that penetrate the IIFE ("public functions") - a dictionary.
+  return {
+    showLoadingSpinner: showLoadingSpinner,
+    hideLoadingSpinner: hideLoadingSpinner,
+    add: add,
+    removeList: removeList,
+    hideModal: hideModal,
+    showErrorMessage: showErrorMessage,
+    loadList: loadList,
+    getAll: getAll,
+    addListPokemon: addListPokemon,
+    filterPokemons: filterPokemons,
+    loadDetails: loadDetails,
+    showDetails: showDetails,
+  };
+})();
 
-    return {
-      add: add,
-      removeList:removeList;
-      hideModal:hideModal;
-      getAll: getAll,
-      addListPokemon: addListPokemon,
-      loadList: loadList,
-      loadDetails: loadDetails,
-      showErrorMessage:showErrorMessage,
-      filterPokemons:filterPokemons,
-      showDetails:showDetails
-    };
-  })();
+// Implementation of all Pokemon from the external API in the app's DOM. 
+pokemonRepository.loadList().then(function () {
+  function printList(pokemon) {
+    pokemonRepository.addListPokemon(pokemon);
+  }
 
-pokemonRepository.loadList().then(function() {
-  //go to the pokemonRepository variable which should return the pokemon list via .gitAll*key is it's a funciton needs () and perform a forEach loop through each parameter of the pokemonRepo
- pokemonRepository.addListPokemon(pokemon);}
- pokemonRepository.getAll().forEach(printList);
+  pokemonRepository.getAll().forEach(printList);
 });
